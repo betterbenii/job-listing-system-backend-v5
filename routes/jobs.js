@@ -25,4 +25,14 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
+// Route to get all jobs
+router.get('/', async (req, res) => {
+    try {
+      const jobs = await Job.find();  // Find all job postings in the database
+      res.json(jobs);  // Return job listings as JSON
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
 module.exports = router;
