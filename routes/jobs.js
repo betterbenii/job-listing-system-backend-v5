@@ -119,5 +119,28 @@ router.post('/:id/apply', verifyToken, async (req, res) => {
     }
   });
   
+  // Route to view applications for a specific job (Recruiters only)
+router.get('/:id/applications', verifyToken, async (req, res) => {
+    try {
+      const job = await Job.findById(req.params.id);
+  
+      // Check if the job exists
+      if (!job) {
+        return res.status(404).json({ message: 'Job not found' });
+      }
+  
+      // Ensure that only the recruiter who posted the job can view applications
+      if (job.recruiter.toString() !== req.userId) {
+        return res.status(403).json({ message: 'Access forbidden: You can only view applications for jobs you posted' });
+      }
+  
+      // Find all applications for the job
+      const applications = await Application.find({ job: job._id }).populate('candidate', 'username email');
+  
+      res.json({ jobTitle: job.title, applications });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
 
 module.exports = router;
