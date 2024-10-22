@@ -1,6 +1,7 @@
 const express = require('express');
 const verifyToken = require('../middleware/authMiddleware');
 const Job = require('../models/job');  // Import the Job model
+const Application = require('../models/application.js');  // Import the Application model
 const router = express.Router();
 
 // Route to create a new job
@@ -88,5 +89,35 @@ router.delete('/:id', verifyToken, async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   });
+// Route for candidates to apply for a job
+router.post('/:id/apply', verifyToken, async (req, res) => {
+    try {
+      const job = await Job.findById(req.params.id);
+  
+      // Check if the job exists
+      if (!job) {
+        return res.status(404).json({ message: 'Job not found' });
+      }
+  
+      // Ensure only candidates (not recruiters) can apply for jobs
+      if (req.userRole === 'recruiter') {
+        return res.status(403).json({ message: 'Access forbidden: Recruiters cannot apply for jobs' });
+      }
+  
+      // Create a new application
+      const newApplication = new Application({
+        candidate: req.userId,  // Candidate's user ID from the JWT token
+        job: job._id,
+        resume: req.body.resume,  // Candidate's resume
+        coverLetter: req.body.coverLetter || ''  // Optional cover letter
+      });
+  
+      await newApplication.save();
+      res.status(201).json({ message: 'Application submitted successfully', application: newApplication });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
 
 module.exports = router;
