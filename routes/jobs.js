@@ -65,4 +65,28 @@ router.put('/:id', verifyToken, async (req, res) => {
     }
   });
 
+  // Route to delete a job by ID
+router.delete('/:id', verifyToken, async (req, res) => {
+    try {
+      const job = await Job.findById(req.params.id);
+  
+      // Check if the job exists
+      if (!job) {
+        return res.status(404).json({ message: 'Job not found' });
+      }
+  
+      // Check if the logged-in user is the recruiter who posted the job
+      if (job.recruiter.toString() !== req.userId) {
+        return res.status(403).json({ message: 'Access forbidden: You can only delete jobs you posted' });
+      }
+  
+      // Delete the job
+      await Job.deleteOne({ _id: req.params.id });
+      res.json({ message: 'Job deleted successfully' });
+  
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
 module.exports = router;
