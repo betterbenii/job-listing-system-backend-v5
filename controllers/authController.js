@@ -13,6 +13,7 @@ exports.register = async (req, res) => {
       username: req.body.username,
       email: req.body.email,
       password: hashedPassword,
+      role: req.body.role || 'candidate', //default to candidate if role is not provided
     });
 
     // Save the user to the database
@@ -29,18 +30,23 @@ exports.login = async (req, res) => {
     // Find the user by email
     const user = await User.findOne({ email: req.body.email });
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(404).json({ message: 'User not found' });
     }
 
-    // Verify the password
-    const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    // Check the password
+    const validPassword = await bcrypt.compare(req.body.password, user.password);
+    if (!validPassword) {
+      return res.status(400).json({ message: 'Invalid password' });
     }
 
-    // Generate a JWT token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Generate JWT token including userId and role
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },  // Include role here
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
+    // Return the token
     res.json({ token });
   } catch (error) {
     res.status(500).json({ message: error.message });

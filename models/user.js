@@ -15,8 +15,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  role: {
+    type: String,
+    enum: ['recruiter', 'candidate'],  // Restrict roles to these two options
+    default: 'candidate',  // Default role is candidate
+  },
 }, {
-  timestamps: true,
+  timestamps: true,  // Automatically create createdAt and updatedAt fields
 });
 
 const User = mongoose.model('User', userSchema);
