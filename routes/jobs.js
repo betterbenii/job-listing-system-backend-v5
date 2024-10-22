@@ -35,4 +35,34 @@ router.get('/', async (req, res) => {
     }
   });
 
+  // Route to update a job by ID
+router.put('/:id', verifyToken, async (req, res) => {
+    try {
+      const job = await Job.findById(req.params.id);
+  
+      // Check if the job exists
+      if (!job) {
+        return res.status(404).json({ message: 'Job not found' });
+      }
+  
+      // Check if the logged-in user is the recruiter who posted the job
+      if (job.recruiter.toString() !== req.userId) {
+        return res.status(403).json({ message: 'Access forbidden: You can only edit jobs you posted' });
+      }
+  
+      // Update job details
+      job.title = req.body.title || job.title;
+      job.description = req.body.description || job.description;
+      job.location = req.body.location || job.location;
+      job.requirements = req.body.requirements || job.requirements;
+  
+      // Save the updated job
+      const updatedJob = await job.save();
+      res.json({ message: 'Job updated successfully', job: updatedJob });
+  
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
 module.exports = router;
