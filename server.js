@@ -1,10 +1,13 @@
 const express = require('express');
 const connectToDatabase = require('./db');
-
+const authRoutes = require('./routes/auth.js');
 const app = express();
+app.use(express.json());
+
+app.use('/api/auth', authRoutes);
+
 
 // Middleware to parse JSON request bodies
-app.use(express.json());
 
 // Define the port for the server to listen on
 const PORT = process.env.PORT || 3000;
