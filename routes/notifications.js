@@ -13,4 +13,25 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
+// Route to mark a specific notification as read
+router.patch('/:id/read', verifyToken, async (req, res) => {
+    try {
+      // Find the notification by ID and ensure it belongs to the logged-in user
+      const notification = await Notification.findOne({ _id: req.params.id, user: req.userId });
+      if (!notification) {
+        return res.status(404).json({ message: 'Notification not found' });
+      }
+  
+      // Update the notification's isRead status to true
+      notification.isRead = true;
+      await notification.save();
+  
+      res.json({ message: 'Notification marked as read', notification });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+
 module.exports = router;
