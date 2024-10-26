@@ -32,6 +32,19 @@ router.patch('/:id/read', verifyToken, async (req, res) => {
       res.status(500).json({ message: error.message });
     }
   });
+
+  // Route to get only unread notifications for the logged-in user
+router.get('/unread', verifyToken, async (req, res) => {
+    try {
+      // Find unread notifications for the logged-in user
+      const unreadNotifications = await Notification.find({ user: req.userId, isRead: false }).sort({ createdAt: -1 });
+      res.json({ unreadNotifications });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
   
 
 module.exports = router;
