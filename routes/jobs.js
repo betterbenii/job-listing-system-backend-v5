@@ -2,6 +2,7 @@ const express = require('express');
 const verifyToken = require('../middleware/authMiddleware');
 const Job = require('../models/job');  // Import the Job model
 const Application = require('../models/application.js');  // Import the Application model
+const Notification= require('../models/notification.js')
 const router = express.Router();
 
 
@@ -118,6 +119,13 @@ router.post('/:id/apply', verifyToken, async (req, res) => {
         resume: req.body.resume,  // Candidate's resume
         coverLetter: req.body.coverLetter || ''  // Optional cover letter
       });
+
+      const notification = new Notification({
+        user: job.recruiter,  //  `job.recruiter` holds the recruiter's ID
+        message: `A new candidate applied for your job posting: ${job.title}`,
+      });
+      await notification.save();
+  
   
       await newApplication.save();
       res.status(201).json({ message: 'Application submitted successfully', application: newApplication });
