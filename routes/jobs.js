@@ -214,6 +214,51 @@ router.get('/:id/applications', verifyToken, async (req, res) => {
       }
     });
     
+    // Route for recruiter to respond to a candidate's application
+router.patch('/:jobId/applications/:applicationId/respond', verifyToken, async (req, res) => {
+  try {
+    const { jobId, applicationId } = req.params;
+    const { action } = req.body; // Expected values: 'accepted' or 'rejected'
+
+    const job = await Job.findById(jobId);
+
+    // Check if job exists and the recruiter owns it
+    if (!job || job.recruiter.toString() !== req.userId) {
+      return res.status(403).json({ message: 'Access forbidden: Only the job\'s recruiter can respond to applications' });
+    }
+
+    // Find the application
+    const application = await Application.findById(applicationId).populate('candidate', 'username email');
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    // Ensure valid action
+    if (action !== 'accepted' && action !== 'rejected') {
+      return res.status(400).json({ message: 'Invalid action. Use "accepted" or "rejected"' });
+    }
+
+    // Send notification based on the action taken
+    const message = action === 'accepted'
+      ? `Congratulations! Your application for "${job.title}" was accepted by the recruiter.`
+      : `We're sorry to inform you that your application for "${job.title}" was rejected by the recruiter.`;
+
+    const notification = new Notification({
+      user: application.candidate._id,
+      message,
+    });
+    await notification.save();
+
+    // Optionally, update application status (if you’re tracking application statuses)
+    application.status = action; // For example, you can have a status field in Application schema
+    await application.save();
+
+    res.json({ message: `Application ${action}`, notification });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
     
 
 module.exports = router;
