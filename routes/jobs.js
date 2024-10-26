@@ -21,6 +21,9 @@ router.post('/', verifyToken, async (req, res) => {
       location: req.body.location,
       requirements: req.body.requirements,
       recruiter: req.userId,  // Recruiter who posted the job
+      company: req.body.company,
+      jobType: req.body.jobType,
+      experienceLevel: req.body.experienceLevel
     });
 
     await newJob.save();  // Save the job to the database
@@ -148,30 +151,48 @@ router.get('/:id/applications', verifyToken, async (req, res) => {
   });
 
     // Route to search for jobs by keywords (title, location, or company)
-router.get('/search', async (req, res) => {
-
- 
-  try {
-    // Get the search keyword from the query parameters
-    const keyword = req.query.q || '';
-
-    // Find jobs where title, location, or company includes the keyword (case-insensitive)
-    const jobs = await Job.find({
-      $or: [
-        { title: { $regex: keyword, $options: 'i' } },
-        { location: { $regex: keyword, $options: 'i' } },
-        { company: { $regex: keyword, $options: 'i' } }
-      ]
+    router.get('/search', async (req, res) => {
+      
+      try {
+        const keyword = req.query.q || '';
+        const filters = {};
+    
+        // Apply jobType filter if provided
+        if (req.query.jobType) {
+          filters.jobType = req.query.jobType;
+        }
+    
+        // Apply experienceLevel filter if provided
+        if (req.query.experienceLevel) {
+          filters.experienceLevel = req.query.experienceLevel;
+        }
+    
+        // Apply location filter if provided
+        if (req.query.location) {
+          filters.location = req.query.location;
+        }
+    
+        // Build search query with keyword and filters
+        const jobs = await Job.find({
+          $and: [
+            {
+              $or: [
+                { title: { $regex: keyword, $options: 'i' } },
+                { location: { $regex: keyword, $options: 'i' } },
+                { company: { $regex: keyword, $options: 'i' } }
+              ]
+            },
+            filters
+          ]
+        });
+    
+        res.json({ results: jobs });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message });
+      }
     });
-
-    res.json({ results: jobs });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-
-
-
-
-  });
+    
+    
 
 module.exports = router;
