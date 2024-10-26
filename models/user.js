@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema({
     newJobPosts: { type: Boolean, default: true },  // Default to receiving new job notifications
     applicationUpdates: { type: Boolean, default: true },  // Notifications on application updates
   },
+
+  bookmarkedJobs: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Job',
+  }],
+
   
   personalInfo: {
     type: String,  // Bio or summary about the candidate

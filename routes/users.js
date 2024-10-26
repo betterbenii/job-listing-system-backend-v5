@@ -49,5 +49,64 @@ router.patch('/preferences', verifyToken, async (req, res) => {
     }
   });
   
+  // Route to bookmark a job (Candidates only)
+router.post('/bookmark/:jobId', verifyToken, async (req, res) => {
+    if (req.userRole !== 'candidate') {
+      return res.status(403).json({ message: 'Access forbidden: Only candidates can bookmark jobs' });
+    }
+  
+    try {
+      const user = await User.findById(req.userId);
+  
+      // Check if the job is already bookmarked
+      if (user.bookmarkedJobs.includes(req.params.jobId)) {
+        return res.status(400).json({ message: 'Job already bookmarked' });
+      }
+  
+      // Add the job to the bookmarkedJobs array
+      user.bookmarkedJobs.push(req.params.jobId);
+      await user.save();
+  
+      res.json({ message: 'Job bookmarked successfully', bookmarks: user.bookmarkedJobs });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Route to remove a bookmarked job (Candidates only)
+router.delete('/bookmark/:jobId', verifyToken, async (req, res) => {
+    if (req.userRole !== 'candidate') {
+      return res.status(403).json({ message: 'Access forbidden: Only candidates can remove bookmarks' });
+    }
+  
+    try {
+      const user = await User.findById(req.userId);
+  
+      // Remove the job from the bookmarkedJobs array
+      user.bookmarkedJobs = user.bookmarkedJobs.filter(jobId => jobId.toString() !== req.params.jobId);
+      await user.save();
+  
+      res.json({ message: 'Job bookmark removed successfully', bookmarks: user.bookmarkedJobs });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Route to get all bookmarked jobs (Candidates only)
+router.get('/bookmarks', verifyToken, async (req, res) => {
+    if (req.userRole !== 'candidate') {
+      return res.status(403).json({ message: 'Access forbidden: Only candidates can view bookmarks' });
+    }
+  
+    try {
+      const user = await User.findById(req.userId).populate('bookmarkedJobs');
+      res.json({ bookmarks: user.bookmarkedJobs });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+  
+  
 
 module.exports = router;
