@@ -34,6 +34,9 @@ const jobSchema = new mongoose.Schema({
     ref: 'User',  // Reference to the recruiter (user) who posted the job
     required: true,
   },
+  status: { type: String, 
+    enum: ['open', 'closed', 'expired'], 
+    default: 'open' },
 }, {
   timestamps: true,  // Automatically adds createdAt and updatedAt fields
 });

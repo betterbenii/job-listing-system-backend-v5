@@ -280,6 +280,53 @@ router.patch('/:jobId/applications/:applicationId/respond', verifyToken, async (
   }
 });
 
+// Route for recruiters to update job status
+router.patch('/:id/status', verifyToken, async (req, res) => {
+  const { status } = req.body; // Expected values: 'closed' or 'expired'
+  
+  if (req.userRole !== 'recruiter') {
+    return res.status(403).json({ message: 'Access forbidden: Only recruiters can update job status' });
+  }
+
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
+    }
+
+    if (job.recruiter.toString() !== req.userId) {
+      return res.status(403).json({ message: 'Access forbidden: You can only update jobs you posted' });
+    }
+
+    // Ensure valid status
+    if (!['closed', 'expired'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status. Use "closed" or "expired"' });
+    }
+
+    job.status = status;
+    await job.save();
+
+    // Notify candidates who bookmarked or applied for this job
+    const applicants = await Application.find({ job: job._id }).populate('candidate');
+    const bookmarkedCandidates = await User.find({ bookmarkedJobs: job._id });
+
+    const candidatesToNotify = [...new Set([...applicants.map(app => app.candidate), ...bookmarkedCandidates])];
+
+    for (const candidate of candidatesToNotify) {
+      const notification = new Notification({
+        user: candidate._id,
+        message: `The job "${job.title}" has been marked as ${status}.`,
+      });
+      await notification.save();
+    }
+
+    res.json({ message: `Job status updated to ${status}`, job });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
     
 
 module.exports = router;
