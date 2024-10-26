@@ -152,6 +152,19 @@ router.get('/:id/applications', verifyToken, async (req, res) => {
       // Find all applications for the job
       const applications = await Application.find({ job: job._id }).populate('candidate', 'username email');
   
+      // Send a "viewed" notification to each candidate
+    for (const application of applications) {
+      const notification = new Notification({
+        user: application.candidate._id,
+        message: `Your application for the job "${job.title}" has been viewed by the recruiter.`,
+      });
+      await notification.save();
+    }
+
+
+
+
+
       res.json({ jobTitle: job.title, applications });
     } catch (error) {
       res.status(500).json({ message: error.message });
