@@ -4,6 +4,10 @@ const Job = require('../models/job');  // Import the Job model
 const Application = require('../models/application.js');  // Import the Application model
 const router = express.Router();
 
+
+
+
+
 // Route to create a new job
 router.post('/', verifyToken, async (req, res) => {
   if (req.userRole !== 'recruiter') {
@@ -141,6 +145,33 @@ router.get('/:id/applications', verifyToken, async (req, res) => {
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
+  });
+
+    // Route to search for jobs by keywords (title, location, or company)
+router.get('/search', async (req, res) => {
+
+ 
+  try {
+    // Get the search keyword from the query parameters
+    const keyword = req.query.q || '';
+
+    // Find jobs where title, location, or company includes the keyword (case-insensitive)
+    const jobs = await Job.find({
+      $or: [
+        { title: { $regex: keyword, $options: 'i' } },
+        { location: { $regex: keyword, $options: 'i' } },
+        { company: { $regex: keyword, $options: 'i' } }
+      ]
+    });
+
+    res.json({ results: jobs });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+
+
+
+
   });
 
 module.exports = router;
