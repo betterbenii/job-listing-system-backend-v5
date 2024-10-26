@@ -27,4 +27,27 @@ router.put('/profile', verifyToken, async (req, res) => {
   }
 });
 
+
+//route that lets candidates  to update their notification preferences
+router.patch('/preferences', verifyToken, async (req, res) => {
+    try {
+      if (req.userRole !== 'candidate') {
+        return res.status(403).json({ message: 'Access forbidden: Only candidates can update preferences' });
+      }
+  
+      const candidate = await User.findById(req.userId);
+  
+      // Update preferences based on request body
+      candidate.notificationPreferences.newJobPosts = req.body.newJobPosts ?? candidate.notificationPreferences.newJobPosts;
+      candidate.notificationPreferences.applicationUpdates = req.body.applicationUpdates ?? candidate.notificationPreferences.applicationUpdates;
+  
+      await candidate.save();
+  
+      res.json({ message: 'Notification preferences updated successfully', preferences: candidate.notificationPreferences });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+  
+
 module.exports = router;

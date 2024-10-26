@@ -21,6 +21,12 @@ const userSchema = new mongoose.Schema({
     default: 'candidate',  // Default role is candidate
   },
   // Candidate-specific fields
+
+  notificationPreferences: {
+    newJobPosts: { type: Boolean, default: true },  // Default to receiving new job notifications
+    applicationUpdates: { type: Boolean, default: true },  // Notifications on application updates
+  },
+  
   personalInfo: {
     type: String,  // Bio or summary about the candidate
   },

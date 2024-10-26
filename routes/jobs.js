@@ -1,8 +1,9 @@
 const express = require('express');
-const verifyToken = require('../middleware/authMiddleware');
-const Job = require('../models/job');  // Import the Job model
+const verifyToken = require('../middleware/authMiddleware.js');
+const Job = require('../models/job.js');  // Import the Job model
 const Application = require('../models/application.js');  // Import the Application model
 const Notification= require('../models/notification.js')
+const User = require('../models/user.js');
 const router = express.Router();
 
 
@@ -24,12 +25,32 @@ router.post('/', verifyToken, async (req, res) => {
       recruiter: req.userId,  // Recruiter who posted the job
       company: req.body.company,
       jobType: req.body.jobType,
-      experienceLevel: req.body.experienceLevel
+      experienceLevel: req.body.experienceLevel,
     });
 
     await newJob.save();  // Save the job to the database
+    
+
+    // Notify candidates who opted in for new job notifications
+    const candidates = await User.find({ 
+      role: 'candidate', 
+      'notificationPreferences.newJobPosts': true,
+    });
+    
+
+    for (const candidate of candidates) {
+      const notification = new Notification({
+        user: candidate._id,
+        message: `A new job has been posted: ${newJob.title} at ${newJob.company}`,
+      });
+      await notification.save();
+     
+    }
+
+    // Send the response with the newly created job
     res.status(201).json({ message: 'Job created successfully', job: newJob });
   } catch (error) {
+    console.error('Error creating job or notifications:', error);
     res.status(400).json({ message: error.message });
   }
 });
