@@ -17,17 +17,34 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['recruiter', 'candidate'],  // Restrict roles to these two options
+    enum: ['recruiter', 'candidate', 'admin'],  // Add 'admin' role here
     default: 'candidate',  // Default role is candidate
   },
+  // Candidate-specific fields
+  personalInfo: {
+    type: String,  // Bio or summary about the candidate
+  },
+  education: {
+    type: String,  // Educational background
+  },
+  experience: {
+    type: String,  // Work experience summary
+  },
   resume: {
-    type: String,  // URL or file path to the resume
+    type: String,  // URL or file path to the candidate's resume
   },
   coverLetter: {
     type: String,  // Optional cover letter text
-  }
+  },
+  // Recruiter-specific fields
+  company: {
+    type: String,  // Name of the recruiter's company
+  },
+  companyDescription: {
+    type: String,  // Description of the company
+  },
 }, {
-  timestamps: true,  // Automatically create createdAt and updatedAt fields
+  timestamps: true,  // Automatically creates createdAt and updatedAt fields
 });
 
 const User = mongoose.model('User', userSchema);
