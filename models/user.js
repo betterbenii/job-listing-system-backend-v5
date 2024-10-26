@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema({
     enum: ['recruiter', 'candidate'],  // Restrict roles to these two options
     default: 'candidate',  // Default role is candidate
   },
+  resume: {
+    type: String,  // URL or file path to the resume
+  },
+  coverLetter: {
+    type: String,  // Optional cover letter text
+  }
 }, {
   timestamps: true,  // Automatically create createdAt and updatedAt fields
 });
