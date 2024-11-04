@@ -210,13 +210,14 @@ router.post('/:id/apply', verifyToken(['candidate']), async (req, res) => {
 });
 
 
-// Route for recruiter to view applications
+// Route for any recruiter to view applications for a specific job
 router.get('/:id/applications', verifyToken(['recruiter']), async (req, res) => {
   try {
     const job = await Job.findById(req.params.id);
 
-    if (!job || job.recruiter.toString() !== req.userId) {
-      return res.status(403).json({ message: 'Access forbidden: Only the job poster can view applications' });
+    // Check if the job exists
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
     }
 
     // Find all applications for the job and populate candidate details, including the resume
@@ -230,7 +231,7 @@ router.get('/:id/applications', verifyToken(['recruiter']), async (req, res) => 
     for (const application of applications) {
       const notification = new Notification({
         user: application.candidate._id,
-        message: `Your application for the job "${job.title}" has been viewed by the recruiter.`,
+        message: `Your application for the job "${job.title}" has been viewed by a recruiter.`,
       });
       await notification.save();
     }
