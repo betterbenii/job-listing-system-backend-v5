@@ -1,27 +1,13 @@
 const mongoose = require('mongoose');
 
 const applicationSchema = new mongoose.Schema({
-  candidate: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',  // Reference to the candidate (user) applying
-    required: true,
-  },
-  job: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job',  // Reference to the job being applied to
-    required: true,
-  },
-  resume: {
-    type: String,  // Could be a URL or path to the resume file
-    required: true,
-  },
-  coverLetter: {
-    type: String,  // Optional cover letter
-  }
-}, {
-  timestamps: true  // Automatically adds createdAt and updatedAt fields
+  candidate: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // References the candidate
+  job: { type: mongoose.Schema.Types.ObjectId, ref: 'Job', required: true }, // References the job applied for
+  resume: { type: String }, // Path or URL to resume (optional if stored separately in profile)
+  coverLetter: { type: String }, // Optional cover letter
+  status: { type: String, enum: ['pending', 'accepted', 'rejected'], default: 'pending' }, // Application status
+  appliedDate: { type: Date, default: Date.now } // Automatically sets to the date of application
 });
 
 const Application = mongoose.model('Application', applicationSchema);
-
 module.exports = Application;

@@ -1,64 +1,29 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  role: {
-    type: String,
-    enum: ['recruiter', 'candidate', 'admin'],  // Add 'admin' role here
-    default: 'candidate',  // Default role is candidate
-  },
-  // Candidate-specific fields
-
+  username: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  role: { type: String, enum: ['candidate', 'recruiter', 'admin'], required: true },
+  status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+  deleted: { type: Boolean, default: false }, // Deleted flag
   notificationPreferences: {
-    newJobPosts: { type: Boolean, default: true },  // Default to receiving new job notifications
-    applicationUpdates: { type: Boolean, default: true },  // Notifications on application updates
+    newJobPosts: { type: Boolean, default: true },
+    applicationUpdates: { type: Boolean, default: true },
   },
-
-  bookmarkedJobs: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job',
-  }],
-
-  
+  bookmarkedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],
+  resume: { type: String },
+  coverLetter: { type: String },
+  experience: { type: String },
+  education: { type: String },
   personalInfo: {
-    type: String,  // Bio or summary about the candidate
-  },
-  education: {
-    type: String,  // Educational background
-  },
-  experience: {
-    type: String,  // Work experience summary
-  },
-  resume: {
-    type: String,  // URL or file path to the candidate's resume
-  },
-  coverLetter: {
-    type: String,  // Optional cover letter text
-  },
-  // Recruiter-specific fields
-  company: {
-    type: String,  // Name of the recruiter's company
-  },
-  companyDescription: {
-    type: String,  // Description of the company
-  },
-}, {
-  timestamps: true,  // Automatically creates createdAt and updatedAt fields
+    fullName: { type: String },
+    address: { type: String },
+    phoneNumber: { type: String },
+    dateOfBirth: { type: Date },
+    
+  }
 });
 
 const User = mongoose.model('User', userSchema);
-
 module.exports = User;
