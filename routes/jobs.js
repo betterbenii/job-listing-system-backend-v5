@@ -243,25 +243,33 @@ router.get('/:id/applications', verifyToken(['recruiter']), async (req, res) => 
 });
 
 
-// Route for recruiter to respond to a candidate's application
+// Route for any recruiter to respond to a candidate's application
 router.patch('/:jobId/applications/:applicationId/respond', verifyToken(['recruiter']), async (req, res) => {
   try {
     const { jobId, applicationId } = req.params;
-    const { action } = req.body;
+    const { action } = req.body; // Expected values: 'accepted' or 'rejected'
 
-    const job = await Job.findById(jobId);
-    if (!job || job.recruiter.toString() !== req.userId) {
-      return res.status(403).json({ message: 'Access forbidden' });
+    // Find the job by ID
+    const job = await Job.findById(jobId); // Ensure job is found
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found' });
     }
 
-    const application = await Application.findById(applicationId).populate('candidate');
+    // Find the application
+    const application = await Application.findById(applicationId).populate('candidate', 'username email');
     if (!application) {
       return res.status(404).json({ message: 'Application not found' });
     }
 
+    // Ensure valid action
+    if (action !== 'accepted' && action !== 'rejected') {
+      return res.status(400).json({ message: 'Invalid action. Use "accepted" or "rejected"' });
+    }
+
+    // Send notification based on the action taken
     const message = action === 'accepted'
-      ? `Congratulations! Your application for "${job.title}" was accepted by the recruiter.`
-      : `We're sorry, your application for "${job.title}" was rejected.`;
+      ? `Congratulations! Your application for "${job.title}" was accepted.`
+      : `We're sorry to inform you that your application for "${job.title}" was rejected.`;
 
     const notification = new Notification({
       user: application.candidate._id,
@@ -269,7 +277,8 @@ router.patch('/:jobId/applications/:applicationId/respond', verifyToken(['recrui
     });
     await notification.save();
 
-    application.status = action;
+    // Optionally, update application status (if you’re tracking application statuses)
+    application.status = action; // For example, you can have a status field in Application schema
     await application.save();
 
     res.json({ message: `Application ${action}`, notification });
@@ -277,5 +286,6 @@ router.patch('/:jobId/applications/:applicationId/respond', verifyToken(['recrui
     res.status(500).json({ message: error.message });
   }
 });
+
 
 module.exports = router;
